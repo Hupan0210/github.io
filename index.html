@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>永续合约计算器</title>
+    <style>
+        body {
+            font-family: Arial, 'SimSun', sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #dfe6e9);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        h1 {
+            text-align: center;
+            color: #d63031;
+            font-weight: bold;
+            font-size: 36px;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+        }
+        .section {
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            min-height: 300px; /* 确保有足够高度 */
+        }
+        .section:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            font-size: 24px;
+            color: #2d3436;
+            margin-bottom: 20px;
+            text-align: center;
+            background: linear-gradient(45deg, #0984e3, #00b894);
+            -webkit-background-clip: text;
+            color: transparent;
+            padding: 5px 0;
+            animation: slideIn 0.5s ease-out;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            position: relative;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        label {
+            width: 140px;
+            color: #636e72;
+            font-size: 15px;
+            text-align: right;
+            padding-right: 10px;
+        }
+        input, select {
+            padding: 12px;
+            border: 1px solid #b2bec3;
+            border-radius: 8px;
+            width: 160px;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+        input:hover, select:hover {
+            border-color: #0984e3;
+            box-shadow: 0 0 10px rgba(9, 132, 227, 0.4);
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00b894;
+            box-shadow: 0 0 12px rgba(0, 184, 148, 0.5);
+            background: #fff;
+        }
+        .error {
+            border-color: #d63031 !important;
+            box-shadow: 0 0 10px rgba(214, 48, 49, 0.4) !important;
+        }
+        .error-msg {
+            color: #d63031;
+            font-size: 12px;
+            position: absolute;
+            bottom: -20px;
+            left: 150px;
+            animation: shake 0.3s ease;
+        }
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #0984e3, #00b894);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background: linear-gradient(45deg, #0652dd, #009975);
+            transform: scale(1.1) rotate(2deg);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .result {
+            margin: 15px 0;
+            color: #00b894;
+            font-weight: bold;
+            font-size: 17px;
+            text-align: left;
+            padding-left: 20px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        .sub-result {
+            font-size: 13px;
+            color: #636e72;
+            margin-top: 5px;
+        }
+        .add-margin {
+            color: #d63031;
+        }
+        .total-profit {
+            font-size: 20px;
+            color: #e84393;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(232, 67, 147, 0.1);
+            border-radius: 8px;
+        }
+        .glow-text {
+            position: absolute;
+            top: 66%; /* 2/3处 */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffaa00, 0 0 30px #ffaa00;
+            animation: glow 1.5s ease-in-out infinite alternate;
+            pointer-events: none; /* 防止遮挡鼠标事件 */
+        }
+        .glow-text::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 10%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: -1;
+        }
+
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #ffd700, 0 0 20px #ffaa00, 0 0 30px #ffaa00;
+            }
+            to {
+                text-shadow: 0 0 20px #ffd700, 0 0 30px #ffaa00, 0 0 40px #ffaa00;
+            }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 0 10px;
+            }
+            .section {
+                padding: 15px;
+                min-height: 250px;
+            }
+            label {
+                width: 100px;
+                font-size: 14px;
+            }
+            input, select {
+                width: 130px;
+                padding: 10px;
+            }
+            .error-msg {
+                left: 110px;
+                font-size: 11px;
+            }
+            button {
+                padding: 8px 16px;
+                margin: 10px 0;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            .result {
+                font-size: 15px;
+            }
+            .glow-text {
+                font-size: 22px;
+                top: 66%; /* 保持2/3位置 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>永续合约计算器</h1>
+    <div class="container">
+        <div class="section">
+            <h2>开仓与补仓</h2>
+            <div class="input-group">
+                <label>开仓价 (USDT):</label>
+                <input id="entryPrice" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="entryPriceError"></span>
+            </div>
+            <div class="input-group">
+                <label>开仓数量:</label>
+                <input id="entryQty" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="entryQtyError"></span>
+            </div>
+            <div class="input-group">
+                <label>手续费费率 (%):</label>
+                <input id="feeRate" type="number" min="0" step="0.01" placeholder="如0.05">
+                <span class="error-msg" id="feeRateError"></span>
+            </div>
+            <div class="input-group">
+                <label>杠杆倍数:</label>
+                <input id="leverage" type="number" min="1" placeholder="请输入">
+                <span class="error-msg" id="leverageError"></span>
+            </div>
+            <div class="input-group">
+                <label>开仓方向:</label>
+                <select id="direction">
+                    <option value="long">做多</option>
+                    <option value="short">做空</option>
+                </select>
+            </div>
+            <div id="addMarginInputs"></div>
+            <button onclick="addMarginInput()">+ 添加补仓</button>
+            <div class="result">开仓手续费: <span id="openFee">0</span> USDT</div>
+            <div class="result">当前均价: <span id="avgPrice">0</span> USDT</div>
+            <div class="result">当前持仓数量: <span id="totalQty">0</span></div>
+            <div class="result">当前保证金: <span id="margin">0</span> USDT</div>
+            <div class="result">总成本: <span id="totalCost">0</span> USDT</div>
+            <div class="result">预计爆仓价: <span id="liquidationPrice">0</span> USDT</div>
+        </div>
+
+        <div class="section" id="stopLossSection">
+            <h2>止损设置</h2>
+            <div class="input-group">
+                <label>止损价 (USDT):</label>
+                <input id="stopLossPrice" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="stopLossError"></span>
+            </div>
+            <div class="result">止损平仓手续费: <span id="stopLossFee">0</span> USDT</div>
+            <div class="result">止损亏损额: <span id="stopLossAmount">0</span> USDT</div>
+            <div class="result">所需额外保证金: <span id="extraMargin">0</span> USDT</div>
+            <div class="glow-text">开仓暴富</div>
+        </div>
+
+        <div class="section">
+            <h2>止盈设置</h2>
+            <div class="input-group">
+                <label>第一止盈价 (USDT):</label>
+                <input id="takeProfit1Price" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp1PriceError"></span>
+            </div>
+            <div class="input-group">
+                <label>第一平仓数量:</label>
+                <input id="takeProfit1Qty" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp1QtyError"></span>
+            </div>
+            <div class="result">第一止盈收益: <span id="tp1Profit">0</span> USDT
+                <div class="sub-result">已扣除开仓及补仓手续费</div>
+            </div>
+            <div class="input-group">
+                <label>第二止盈价 (USDT):</label>
+                <input id="takeProfit2Price" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp2PriceError"></span>
+            </div>
+            <div class="input-group">
+                <label>第二平仓数量:</label>
+                <input id="takeProfit2Qty" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp2QtyError"></span>
+            </div>
+            <div class="result">第二止盈收益: <span id="tp2Profit">0</span> USDT</div>
+            <div class="input-group">
+                <label>第三止盈价 (USDT):</label>
+                <input id="takeProfit3Price" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp3PriceError"></span>
+            </div>
+            <div class="input-group">
+                <label>第三平仓数量:</label>
+                <input id="takeProfit3Qty" type="number" min="0" placeholder="请输入">
+                <span class="error-msg" id="tp3QtyError"></span>
+            </div>
+            <div class="result">第三止盈收益: <span id="tp3Profit">0</span> USDT</div>
+            <div class="total-profit">总盈利: <span id="totalProfit">0</span> USDT</div>
+        </div>
+    </div>
+
+    <script>
+        let marginInputs = [];
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => input.addEventListener('input', calculate));
+
+        function addMarginInput() {
+            const div = document.createElement('div');
+            div.className = 'input-group';
+            div.innerHTML = `
+                <label>补仓价 (USDT):</label>
+                <input type="number" min="0" placeholder="请输入" class="marginPrice">
+                <span class="error-msg"></span>
+                <label>补仓数量:</label>
+                <input type="number" min="0" placeholder="请输入" class="marginQty">
+                <span class="error-msg"></span>
+                <button onclick="this.parentElement.remove(); calculate();">删除</button>
+            `;
+            document.getElementById('addMarginInputs').appendChild(div);
+            div.querySelectorAll('input').forEach(input => input.addEventListener('input', calculate));
+            marginInputs.push(div);
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error-msg').forEach(span => span.textContent = '');
+            document.querySelectorAll('input').forEach(input => input.classList.remove('error'));
+        }
+
+        function setError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorSpan = document.getElementById(`${inputId}Error`);
+            input.classList.add('error');
+            errorSpan.textContent = message;
+        }
+
+        // 鼠标移动光效
+        const stopLossSection = document.getElementById('stopLossSection');
+        stopLossSection.addEventListener('mousemove', (e) => {
+            const glowText = stopLossSection.querySelector('.glow-text');
+            const rect = stopLossSection.getBoundingClientRect();
+            const x = e.clientX - rect.left - glowText.offsetWidth / 2;
+            const y = e.clientY - rect.top - glowText.offsetHeight / 2;
+            const distance = Math.sqrt(x * x + y * y);
+            const maxDistance = 150; // 光效范围
+
+            if (distance < maxDistance) {
+                const opacity = 1 - distance / maxDistance;
+                glowText.style.setProperty('--mouse-opacity', opacity);
+                glowText.querySelector('::before').style.opacity = opacity;
+            } else {
+                glowText.style.setProperty('--mouse-opacity', 0);
+                glowText.querySelector('::before').style.opacity = 0;
+            }
+        });
+
+        function calculate() {
+            clearErrors();
+            let hasError = false;
+
+            // 开仓与补仓
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value) || 0;
+            const entryQty = parseFloat(document.getElementById('entryQty').value) || 0;
+            const feeRate = parseFloat(document.getElementById('feeRate').value) / 100 || 0;
+            const leverage = parseFloat(document.getElementById('leverage').value) || 1;
+            const direction = document.getElementById('direction').value;
+
+            if (entryPrice <= 0) { setError('entryPrice', '请输入有效价格'); hasError = true; }
+            if (entryQty <= 0) { setError('entryQty', '请输入有效数量'); hasError = true; }
+            if (feeRate < 0) { setError('feeRate', '费率不能为负'); hasError = true; }
+            if (leverage < 1) { setError('leverage', '杠杆需≥1'); hasError = true; }
+
+            let totalQty = entryQty;
+            let totalValue = entryPrice * entryQty;
+            let totalMargin = entryPrice * entryQty / leverage;
+            let totalFee = entryPrice * entryQty * feeRate;
+
+            marginInputs.forEach(div => {
+                const price = parseFloat(div.querySelector('.marginPrice').value) || 0;
+                const qty = parseFloat(div.querySelector('.marginQty').value) || 0;
+                if (price <= 0 && qty > 0) {
+                    div.querySelector('.marginPrice').classList.add('error');
+                    div.querySelector('.error-msg').textContent = '请输入有效价格';
+                    hasError = true;
+                }
+                if (qty <= 0 && price > 0) {
+                    div.querySelector('.marginQty').classList.add('error');
+                    div.querySelectorAll('.error-msg')[1].textContent = '请输入有效数量';
+                    hasError = true;
+                }
+                totalQty += qty;
+                totalValue += price * qty;
+                totalMargin += price * qty / leverage;
+                totalFee += price * qty * feeRate;
+            });
+
+            const avgPrice = totalQty > 0 ? totalValue / totalQty : 0;
+            const totalCost = totalMargin + totalFee;
+            const liquidationPrice = direction === 'long'
+                ? avgPrice - (totalMargin / totalQty * (1 + feeRate))
+                : avgPrice + (totalMargin / totalQty * (1 + feeRate));
+
+            if (!hasError) {
+                document.getElementById('openFee').textContent = totalFee.toFixed(4);
+                document.getElementById('avgPrice').textContent = avgPrice.toFixed(4);
+                document.getElementById('totalQty').textContent = totalQty.toFixed(4);
+                document.getElementById('margin').textContent = totalMargin.toFixed(4);
+                document.getElementById('totalCost').textContent = totalCost.toFixed(4);
+                document.getElementById('liquidationPrice').textContent = liquidationPrice.toFixed(4);
+            }
+
+            // 止损
+            const stopLossPrice = parseFloat(document.getElementById('stopLossPrice').value) || 0;
+            if (stopLossPrice > 0) {
+                if (direction === 'long' && stopLossPrice > avgPrice) {
+                    setError('stopLossPrice', '做多止损价需≤均价');
+                    hasError = true;
+                } else if (direction === 'short' && stopLossPrice < avgPrice) {
+                    setError('stopLossPrice', '做空止损价需≥均价');
+                    hasError = true;
+                }
+            }
+            const stopLossFee = stopLossPrice * totalQty * feeRate;
+            const stopLossAmount = direction === 'long'
+                ? (avgPrice - stopLossPrice) * totalQty + stopLossFee
+                : (stopLossPrice - avgPrice) * totalQty + stopLossFee;
+            const extraMargin = stopLossAmount - totalMargin;
+
+            if (!hasError) {
+                document.getElementById('stopLossFee').textContent = stopLossFee.toFixed(4);
+                document.getElementById('stopLossAmount').textContent = stopLossAmount.toFixed(4);
+                document.getElementById('extraMargin').textContent = extraMargin > 0 ? extraMargin.toFixed(4) : '无需增加';
+                document.getElementById('extraMargin').parentElement.className = extraMargin > 0 ? 'result add-margin' : 'result';
+            }
+
+            // 止盈与总盈利
+            const tp1Price = parseFloat(document.getElementById('takeProfit1Price').value) || 0;
+            const tp1Qty = parseFloat(document.getElementById('takeProfit1Qty').value) || 0;
+            const tp2Price = parseFloat(document.getElementById('takeProfit2Price').value) || 0;
+            const tp2Qty = parseFloat(document.getElementById('takeProfit2Qty').value) || 0;
+            const tp3Price = parseFloat(document.getElementById('takeProfit3Price').value) || 0;
+            const tp3Qty = parseFloat(document.getElementById('takeProfit3Qty').value) || 0;
+
+            if (tp1Qty > totalQty) { setError('takeProfit1Qty', '数量超限'); hasError = true; }
+            if (tp2Qty > totalQty - tp1Qty) { setError('takeProfit2Qty', '数量超限'); hasError = true; }
+            if (tp3Qty > totalQty - tp1Qty - tp2Qty) { setError('takeProfit3Qty', '数量超限'); hasError = true; }
+
+            const tp1Fee = tp1Price * tp1Qty * feeRate;
+            const tp1Profit = direction === 'long'
+                ? (tp1Price - avgPrice) * tp1Qty - (totalFee + tp1Fee)
+                : (avgPrice - tp1Price) * tp1Qty - (totalFee + tp1Fee);
+
+            const tp2Fee = tp2Price * tp2Qty * feeRate;
+            const tp2Profit = direction === 'long'
+                ? (tp2Price - avgPrice) * tp2Qty - tp2Fee
+                : (avgPrice - tp2Price) * tp2Qty - tp2Fee;
+
+            const tp3Fee = tp3Price * tp3Qty * feeRate;
+            const tp3Profit = direction === 'long'
+                ? (tp3Price - avgPrice) * tp3Qty - tp3Fee
+                : (avgPrice - tp3Price) * tp3Qty - tp3Fee;
+
+            const totalProfit = tp1Profit + tp2Profit + tp3Profit;
+
+            if (!hasError) {
+                document.getElementById('tp1Profit').textContent = tp1Profit.toFixed(4);
+                document.getElementById('tp2Profit').textContent = tp2Profit.toFixed(4);
+                document.getElementById('tp3Profit').textContent = tp3Profit.toFixed(4);
+                document.getElementById('totalProfit').textContent = totalProfit.toFixed(4);
+            }
+        }
+    </script>
+</body>
+</html>
